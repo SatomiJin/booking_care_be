@@ -9,27 +9,96 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      User.belongsTo(models.SystemCodes, {
+        foreignKey: "roleKey",
+        targetKey: "keyMap",
+        as: "roleData",
+      });
+      User.belongsTo(models.SystemCodes, {
+        foreignKey: "positionKey",
+        targetKey: "keyMap",
+        as: "positionData",
+      });
+      User.belongsTo(models.SystemCodes, {
+        foreignKey: "genderKey",
+        targetKey: "keyMap",
+        as: "genderData",
+      });
     }
   }
   User.init(
     {
-      id: DataTypes.UUID,
-      firstName: DataTypes.STRING,
-      lastName: DataTypes.STRING,
-      email: DataTypes.STRING,
-      password: DataTypes.STRING,
-      phoneNumber: DataTypes.STRING,
-      typeRole: DataTypes.STRING,
-      keyMap: DataTypes.STRING,
-      isActive: DataTypes.BOOLEAN,
-      geo_level_1_id: DataTypes.INTEGER,
-      geo_level_2_id: DataTypes.INTEGER,
-      geo_level_3_id: DataTypes.INTEGER,
-      geo_level_1_name: DataTypes.STRING,
-      geo_level_2_name: DataTypes.STRING,
-      geo_level_3_name: DataTypes.STRING,
-      geo_version: DataTypes.STRING,
-      image: DataTypes.TEXT,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      firstName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      geo_level_1_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      geo_level_2_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      geo_level_3_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      geo_level_1_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      geo_level_2_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      geo_level_3_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      geo_version: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      image: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      roleKey: {
+        type: DataTypes.STRING,
+      },
+      positionKey: {
+        type: DataTypes.STRING,
+      },
+      genderKey: {
+        type: DataTypes.STRING,
+      },
     },
     {
       sequelize,

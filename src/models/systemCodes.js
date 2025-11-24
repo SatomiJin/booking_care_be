@@ -9,15 +9,44 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      SystemCodes.hasMany(models.User, {
+        foreignKey: "roleKey",
+        sourceKey: "keyMap",
+      });
+      SystemCodes.hasMany(models.User, {
+        foreignKey: "positionKey",
+        sourceKey: "keyMap",
+      });
+      SystemCodes.hasMany(models.User, {
+        foreignKey: "genderKey",
+        sourceKey: "keyMap",
+      });
     }
   }
   SystemCodes.init(
     {
-      id: DataTypes.UUID,
-      type: DataTypes.STRING,
-      keyMap: DataTypes.STRING,
-      valueEn: DataTypes.STRING,
-      valueVi: DataTypes.STRING,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      keyMap: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      valueEn: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      valueVi: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       sequelize,

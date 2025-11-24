@@ -13,10 +13,24 @@ module.exports = (sequelize, DataTypes) => {
   }
   Specialties.init(
     {
-      id: DataTypes.UUID,
-      description: DataTypes.TEXT,
-      name: DataTypes.STRING,
-      image: DataTypes.TEXT,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      image: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       sequelize,

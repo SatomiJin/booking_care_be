@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+
 module.exports = (sequelize, DataTypes) => {
   class history extends Model {
     /**
@@ -11,11 +12,23 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
+
   history.init(
     {
-      id: DataTypes.UUID,
-      customerId: DataTypes.STRING,
-      physicianId: DataTypes.STRING,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      customerId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      physicianId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -23,5 +36,6 @@ module.exports = (sequelize, DataTypes) => {
       freezeTableName: true,
     }
   );
+
   return history;
 };

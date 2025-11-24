@@ -7,11 +7,11 @@ module.exports = {
     await queryInterface.createTable("Bookings", {
       id: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
+        defaultValue: Sequelize.literal("(UUID())"), // ✅ Cách an toàn cho MariaDB/MySQL
         allowNull: false,
+        primaryKey: true,
       },
-      statusId: {
+      statusKey: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -28,7 +28,7 @@ module.exports = {
         allowNull: false,
       },
       timeType: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING, // ⚠️ Cậu dùng STRING trong model nên giữ nguyên
         allowNull: false,
       },
       createdAt: {
@@ -36,11 +36,12 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
-
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal(
+          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        ),
       },
     });
   },

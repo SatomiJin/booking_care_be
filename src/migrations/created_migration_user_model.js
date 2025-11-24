@@ -27,10 +27,7 @@ module.exports = {
       phoneNumber: {
         type: Sequelize.STRING,
       },
-      role: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
+
       isActive: {
         type: Sequelize.BOOLEAN,
         defaultValue: true,

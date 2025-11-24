@@ -13,11 +13,28 @@ module.exports = (sequelize, DataTypes) => {
   }
   Schedules.init(
     {
-      id: DataTypes.UUID,
-      currentQuantitySchedule: DataTypes.INTEGER,
-      maxQuantitySchedule: DataTypes.INTEGER,
-      date: DataTypes.DATE,
-      timeType: DataTypes.STRING,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      currentQuantitySchedule: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      maxQuantitySchedule: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      date: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      timeType: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       doctorId: DataTypes.STRING,
     },
     {

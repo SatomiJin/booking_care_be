@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+
 module.exports = (sequelize, DataTypes) => {
   class physician_detail extends Model {
     /**
@@ -11,12 +12,27 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
+
   physician_detail.init(
     {
-      id: DataTypes.UUID,
-      physicianId: DataTypes.STRING,
-      clinicId: DataTypes.STRING,
-      specialtyId: DataTypes.STRING,
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      physicianId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      clinicId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      specialtyId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -24,5 +40,6 @@ module.exports = (sequelize, DataTypes) => {
       freezeTableName: true,
     }
   );
+
   return physician_detail;
 };
