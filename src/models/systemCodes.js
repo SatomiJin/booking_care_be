@@ -9,15 +9,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      SystemCodes.hasMany(models.User, {
+      SystemCodes.hasMany(models.Users, {
         foreignKey: "roleKey",
         sourceKey: "keyMap",
       });
-      SystemCodes.hasMany(models.User, {
+      SystemCodes.hasMany(models.Users, {
         foreignKey: "positionKey",
         sourceKey: "keyMap",
       });
-      SystemCodes.hasMany(models.User, {
+      SystemCodes.hasMany(models.Users, {
         foreignKey: "genderKey",
         sourceKey: "keyMap",
       });

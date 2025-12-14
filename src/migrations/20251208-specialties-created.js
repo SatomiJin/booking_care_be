@@ -1,22 +1,31 @@
 "use strict";
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
+    // Enable extension for UUID
+    await queryInterface.sequelize.query(
+      `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`
+    );
+
     await queryInterface.createTable("Specialties", {
       id: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
+        allowNull: false,
         primaryKey: true,
       },
       description: {
-        type: Sequelize.TEXT("medium"),
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       image: {
-        type: Sequelize.TEXT("medium"),
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
@@ -31,7 +40,7 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("Specialties");
   },
 };

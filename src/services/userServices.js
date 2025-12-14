@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const { validateRequiredFields } = require("../utils/utils");
 const db = require("../models/index.js");
 const { get } = require("../routes/userRoute.js");
+const { Op, fn, col, where } = require("sequelize");
+
 const hashPassword = async (password) => {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -44,7 +46,7 @@ const createUser = async (data) => {
       return validationResult;
     }
     //check user exists
-    const existingUser = await db.User.findOne({
+    const existingUser = await db.Users.findOne({
       where: { email: data.email },
     });
     if (existingUser) {
@@ -57,7 +59,7 @@ const createUser = async (data) => {
     //hash password
     const hashedPassword = await hashPassword(data.password);
     //create user
-    const newUser = await db.User.create({
+    const newUser = await db.Users.create({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
@@ -85,14 +87,14 @@ const createUser = async (data) => {
       return {
         status: "ERROR",
         code: 500,
-        message: "User creation failed",
+        message: "Users creation failed",
       };
     }
 
     return {
       status: "SUCCESS",
       code: 200,
-      message: "User created successfully",
+      message: "Users created successfully",
       id: newUser.id,
     };
     // Simulate user creation logic
@@ -109,9 +111,68 @@ const createUser = async (data) => {
 };
 
 //Lấy danh sách thông tin người dùng
-const getListUsers = async () => {
+const getListUsers = async (data) => {
   try {
-    const users = await db.User.findAll({
+    let whereCondition = {};
+    const hasTextSearch = data?.text_search && data.text_search.trim() !== "";
+
+    const hasFilter = Boolean(
+      data?.isActive !== undefined ||
+        data?.roleKey ||
+        data?.positionKey ||
+        data?.genderKey ||
+        data?.geo_level_1_name ||
+        data?.geo_level_2_name ||
+        data?.geo_level_3_name
+    );
+
+    //lấy tất cả user
+
+    let normalizedKeyword = "";
+    // có truyền
+    if (hasTextSearch) {
+      const keywords = hasTextSearch ? data.text_search.trim() : null;
+
+      normalizedKeyword = keywords
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      whereCondition[Op.or] = [
+        where(fn("unaccent", col("firstName")), {
+          [Op.iLike]: `%${normalizedKeyword}%`,
+        }),
+        where(fn("unaccent", col("lastName")), {
+          [Op.iLike]: `%${normalizedKeyword}%`,
+        }),
+        where(fn("unaccent", col("email")), {
+          [Op.iLike]: `%${normalizedKeyword}%`,
+        }),
+      ];
+    }
+    //filter
+    // --- FILTER isActive ---
+    if (data.isActive !== undefined) whereCondition.isActive = data.isActive;
+    // --- FILTER theo các trường trực tiếp map vào DB ---
+    const directFilters = [
+      "geo_level_1_name",
+      "geo_level_2_name",
+      "geo_level_3_name",
+      "roleKey",
+      "positionKey",
+    ];
+
+    directFilters.forEach((field) => {
+      if (
+        data[field] !== undefined &&
+        data[field] !== null &&
+        data[field] !== ""
+      ) {
+        whereCondition[field] = data[field];
+      }
+    });
+
+    const users = await db.Users.findAll({
+      where: whereCondition,
       attributes: [
         "id",
         "firstName",
@@ -119,9 +180,6 @@ const getListUsers = async () => {
         "email",
         "phoneNumber",
         "isActive",
-        // "roleKey",
-        // "positionKey",
-        // "genderKey",
         "createdAt",
         "updatedAt",
       ],
@@ -150,13 +208,14 @@ const getListUsers = async () => {
         data: [],
       };
     }
-
     return {
       status: "SUCCESS",
       message: "Users retrieved successfully",
       data: users,
     };
   } catch (error) {
+    console.log(error);
+
     return {
       status: "ERROR",
       message: "Failed to get list users",
@@ -172,11 +231,11 @@ const getDetailUser = async (id) => {
     if (!id) {
       return {
         status: "ERROR",
-        message: "User ID is required",
+        message: "Users ID is required",
         code: 400,
       };
     }
-    const user = await db.User.findOne({
+    const user = await db.Users.findOne({
       where: { id },
       attributes: [
         "id",
@@ -219,13 +278,13 @@ const getDetailUser = async (id) => {
     if (!user) {
       return {
         status: "ERROR",
-        message: "User not found",
+        message: "Users not found",
         code: 404,
       };
     }
     return {
       status: "SUCCESS",
-      message: "User details retrieved successfully",
+      message: "Users details retrieved successfully",
       data: user,
     };
   } catch (error) {
@@ -238,9 +297,105 @@ const getDetailUser = async (id) => {
     };
   }
 };
+//update detail user
+const updateUser = async (data) => {
+  try {
+    if (!data.id) {
+      return {
+        status: "ERROR",
+        message: "Users ID is required",
+      };
+    }
+    let user = await db.Users.findOne({ where: { id: data.id } });
+    if (!user) {
+      return {
+        status: "ERROR",
+        message: "Users not found",
+      };
+    }
+    // required fields for update user
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "isActive",
+      "geo_level_1_id",
+      "geo_level_2_id",
+      "geo_level_3_id",
+      "geo_version",
+      "roleKey",
+      // "positionKey",
+      "genderKey",
+    ];
+
+    //check missing fields
+    const missingField = [];
+    for (const item of requiredFields) {
+      const value = data[item];
+      if (value === undefined || value === null || value === "") {
+        missingField.push(item);
+      }
+    }
+    if (missingField.length > 0) {
+      return {
+        status: "ERROR",
+        message: `Missing required fields: ${missingField.join(", ")}`,
+      };
+    }
+
+    //update user
+    await db.Users.update(data, { where: { id: data.id } });
+    return {
+      status: "SUCCESS",
+      message: "Users updated successfully",
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      status: "ERROR",
+      message: "Failed to update user",
+      detail: error.message,
+    };
+  }
+};
+
+//delete user
+const deleteUser = async (id) => {
+  try {
+    console.log(id);
+    // return;
+    if (!id) {
+      return {
+        status: "ERROR",
+        message: "Users ID is required",
+      };
+    }
+    const user = await db.Users.findOne({ where: { id } });
+    if (!user) {
+      return {
+        status: "ERROR",
+        message: "Users not found",
+      };
+    }
+    await db.Users.destroy({ where: { id } });
+    return {
+      status: "SUCCESS",
+      message: "Users deleted successfully",
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      status: "ERROR",
+      message: "Failed to delete user",
+      detail: error.message,
+    };
+  }
+};
 
 module.exports = {
   createUser,
   getListUsers,
   getDetailUser,
+  updateUser,
+  deleteUser,
 };

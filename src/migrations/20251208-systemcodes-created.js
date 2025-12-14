@@ -1,50 +1,41 @@
 "use strict";
 
-const { DataTypes } = require("sequelize");
-
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Clinics", {
+    await queryInterface.createTable("SystemCodes", {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
         primaryKey: true,
+      },
+
+      type: {
+        type: Sequelize.STRING,
         allowNull: false,
       },
-      geo_level_1_id: {
-        type: Sequelize.INTEGER,
-      },
-      geo_level_2_id: {
-        type: Sequelize.INTEGER,
-      },
-      geo_level_3_id: {
-        type: Sequelize.INTEGER,
-      },
-      geo_level_1_name: {
+
+      keyMap: {
         type: Sequelize.STRING,
-      },
-      geo_level_2_name: {
-        type: Sequelize.STRING,
-      },
-      geo_level_3_name: {
-        type: Sequelize.STRING,
-      },
-      geo_version: {
-        type: Sequelize.STRING,
-        defaultValue: "v1",
-      },
-      image: {
-        type: DataTypes.TEXT("medium"),
-      },
-      name: {
-        type: DataTypes.STRING,
         allowNull: false,
       },
+
+      valueEn: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+
+      valueVi: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
+
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -53,7 +44,7 @@ module.exports = {
     });
   },
 
-  async down(queryInterface) {
-    await queryInterface.dropTable("Clinics");
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("SystemCodes");
   },
 };

@@ -1,47 +1,56 @@
 "use strict";
 
-const { DataTypes } = require("sequelize");
-
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Bật extension pgcrypto để hỗ trợ gen_random_uuid()
+    await queryInterface.sequelize.query(
+      `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`
+    );
+
     await queryInterface.createTable("Bookings", {
       id: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.literal("(UUID())"), // ✅ Cách an toàn cho MariaDB/MySQL
+        defaultValue: Sequelize.literal("gen_random_uuid()"), // UUID v4 PG
         allowNull: false,
         primaryKey: true,
       },
+
       statusKey: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
+
       physicianId: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
+
       customerId: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
+
       date: {
-        type: DataTypes.DATE,
+        type: Sequelize.DATE,
         allowNull: false,
       },
+
       timeType: {
-        type: DataTypes.STRING, // ⚠️ Cậu dùng STRING trong model nên giữ nguyên
+        type: Sequelize.STRING,
         allowNull: false,
       },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
+
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal(
-          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-        ),
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
     });
   },

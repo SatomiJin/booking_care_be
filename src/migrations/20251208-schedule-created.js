@@ -1,34 +1,46 @@
 "use strict";
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
+    // Enable UUID generator
+    await queryInterface.sequelize.query(
+      `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`
+    );
+
     await queryInterface.createTable("schedules", {
       id: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
       },
+
       currentQuantitySchedule: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
       },
+
       maxQuantitySchedule: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
       },
+
       date: {
         type: Sequelize.DATE,
-        allowNull: true,
+        allowNull: false,
       },
+
       timeType: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
+
       doctorId: {
         type: Sequelize.STRING,
         allowNull: true,
       },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -42,7 +54,7 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface /* , Sequelize */) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("schedules");
   },
 };
