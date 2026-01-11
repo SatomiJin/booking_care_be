@@ -1,8 +1,10 @@
 const express = require("express");
-const dotenv = require("dotenv").config();
+require("dotenv").config();
 const bodyParser = require("body-parser");
-const { connectDB } = require("./config/connectDB");
+
+const db = require("./models"); // 👈 dùng Sequelize instance DUY NHẤT
 const initWebRoutes = require("./routes/index");
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -10,9 +12,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 initWebRoutes(app);
 
-connectDB();
+// ✅ Kết nối DB
+(async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log("✅ Supabase DB connected");
+  } catch (error) {
+    console.error("❌ DB connection failed:", error);
+    process.exit(1);
+  }
+})();
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });

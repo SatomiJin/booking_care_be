@@ -1,8 +1,13 @@
 const bcrypt = require("bcrypt");
 const { validateRequiredFields } = require("../utils/utils");
 const db = require("../models/index.js");
-const { get } = require("../routes/userRoute.js");
+// const { get } = require("../routes/userRoute.js");
 const { Op, fn, col, where } = require("sequelize");
+const codeMessageError = require("../../codeMessageError.js");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../services/jwtServices.js");
 
 const hashPassword = async (password) => {
   const saltRounds = 10;
@@ -53,7 +58,7 @@ const createUser = async (data) => {
       return {
         status: "ERROR",
         code: 409,
-        message: "Email already existed",
+        error: codeMessageError.PATH_MESSAGE_ERROR.EMAIL_ALREADY_EXISTS,
       };
     }
     //hash password
@@ -87,7 +92,7 @@ const createUser = async (data) => {
       return {
         status: "ERROR",
         code: 500,
-        message: "Users creation failed",
+        error: codeMessageError.PATH_MESSAGE_ERROR.CREATE_USER_FAILED,
       };
     }
 
@@ -100,12 +105,11 @@ const createUser = async (data) => {
     // Simulate user creation logic
   } catch (error) {
     console.log(error);
-
     return {
       status: "ERROR",
       message: "Failed to create user",
       code: 500,
-      error: error.message,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
     };
   }
 };
@@ -219,7 +223,7 @@ const getListUsers = async (data) => {
     return {
       status: "ERROR",
       message: "Failed to get list users",
-      detail: error.message,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
     };
   }
 };
@@ -288,12 +292,12 @@ const getDetailUser = async (id) => {
       data: user,
     };
   } catch (error) {
-    // console.log(error);
+    console.log(error);
 
     return {
       status: "ERROR",
       message: "Failed to get user details",
-      detail: error.message,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
     };
   }
 };
@@ -354,7 +358,7 @@ const updateUser = async (data) => {
     return {
       status: "ERROR",
       message: "Failed to update user",
-      detail: error.message,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
     };
   }
 };
@@ -387,7 +391,77 @@ const deleteUser = async (id) => {
     return {
       status: "ERROR",
       message: "Failed to delete user",
-      detail: error.message,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
+    };
+  }
+};
+
+//login
+const loginUser = async (data) => {
+  try {
+    if (!data.email || !data.password) {
+      return {
+        status: "ERROR",
+        code: 400,
+        error: codeMessageError.PATH_MESSAGE_ERROR.REQUIRE_CREDENTIALS,
+      };
+    }
+    const user = await db.Users.findOne({ where: { email: data.email } });
+    let count = 0;
+    //check user exists
+    if (!user) {
+      return {
+        status: "ERROR",
+        code: 400,
+        error: codeMessageError.PATH_MESSAGE_ERROR.INVALID_CREDENTIALS,
+      };
+    }
+    //check password
+    let checkPassword = await bcrypt.compare(data?.password, user?.password);
+    if (!checkPassword) {
+      count++;
+      if (count >= 5) {
+        user.isActive = false;
+        await user.save();
+      }
+      return {
+        status: "ERROR",
+        code: 400,
+        error: codeMessageError.PATH_MESSAGE_ERROR.INVALID_CREDENTIALS,
+      };
+    }
+
+    if (user.isActive === false) {
+      return {
+        status: "ERROR",
+        code: 403,
+        error: codeMessageError.PATH_MESSAGE_ERROR.USER_DEACTIVATED,
+      };
+    }
+    const access_token = await generateAccessToken({
+      id: user.id,
+      email: user.email,
+      roleKey: user.roleKey,
+    });
+    const refresh_token = await generateRefreshToken({
+      id: user.id,
+      email: user.email,
+      roleKey: user.roleKey,
+    });
+    return {
+      status: "SUCCESS",
+      code: 200,
+      message: codeMessageError.PATH_MESSAGE_ERROR.LOGIN_SUCCESS.message,
+      access_token,
+      refresh_token,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      status: "ERROR",
+      // message: "Failed to login user",
+      code: 500,
+      error: codeMessageError.PATH_MESSAGE_ERROR.INTERNAL_SERVER_ERROR,
     };
   }
 };
@@ -398,4 +472,6 @@ module.exports = {
   getDetailUser,
   updateUser,
   deleteUser,
+
+  loginUser,
 };
