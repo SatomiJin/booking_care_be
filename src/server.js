@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 
 const db = require("./models"); // 👈 dùng Sequelize instance DUY NHẤT
 const initWebRoutes = require("./routes/index");
+const { connectDB } = require("./config/config");
 
 const app = express();
 
@@ -22,6 +23,8 @@ initWebRoutes(app);
     process.exit(1);
   }
 })();
+
+connectDB();
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
